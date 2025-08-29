@@ -1,0 +1,301 @@
+# InterviewPro 🎯
+
+**An AI-powered platform for conducting mock interviews with real-time voice interaction and intelligent feedback analysis.**
+
+---
+
+## 🚀 Features
+
+* **AI-Powered Voice Interviews**: Engage in realistic, dynamic mock interviews with conversational AI
+* **Real-time Feedback Engine**: Instant and granular feedback powered by advanced NLP and scoring algorithms
+* **Multiple Interview Modes**: Choose from Technical, Behavioral, or Mixed interviews
+* **Tech Stack-Based Customization**: Receive questions tailored to your chosen technology stack
+* **Comprehensive Evaluation Metrics**:
+
+  * Communication Skills
+  * Technical Knowledge
+  * Problem Solving
+  * Cultural Fit
+  * Confidence & Clarity
+* **Interview History & Analytics**: Review past interviews, track growth, and analyze patterns
+* **Secure User Authentication**: Seamless Firebase integration for safe login/signup
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* **Next.js 15.3.2** - Modern React framework with App Router
+* **React 19** - UI library for dynamic interfaces
+* **TypeScript** - Strongly-typed JavaScript
+* **Tailwind CSS** - Utility-first design system
+* **Radix UI** - Headless, accessible UI components
+* **Lucide React** - Scalable icon system
+
+### Backend & Database
+
+* **Firebase** - Auth and Firestore database
+* **Firebase Admin SDK** - Server-side auth and DB management
+
+### AI & Voice
+
+* **VAPI AI** - Conversational AI with voice interaction
+* **Google AI SDK (Gemini 2.0)** - Question generation & feedback logic
+* **OpenAI GPT-4** - Natural conversation modeling
+* **11Labs** - High-quality voice synthesis
+* **Deepgram** - Fast and accurate speech-to-text
+
+### Form Handling & Validation
+
+* **React Hook Form** + **Zod** + **Hookform Resolvers** - For robust, type-safe form workflows
+
+### Styling & Themes
+
+* **Class Variance Authority** & **Tailwind Merge** - Component styling and merging
+* **Tailwind Animate** - Custom animations
+* **Next Themes** - Light/Dark mode support
+
+---
+
+## 📁 Project Structure
+
+```
+interview_pro/
+├── app/
+│   ├── (auth)/
+│   │   ├── sign-in/
+│   │   └── sign-up/
+│   ├── (root)/
+│   │   ├── interview/
+│   │   └── page.tsx
+│   ├── api/
+│   │   ├── dev/
+│   │   └── vapi/
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── ui/
+│   ├── Agent.tsx
+│   ├── AuthForm.tsx
+│   └── InterviewCard.tsx
+├── lib/
+│   ├── actions/
+│   ├── utils.ts
+│   └── vapi.sdk.ts
+├── firebase/
+│   ├── client.ts
+│   └── admin.ts
+├── types/
+├── constants/
+└── public/
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+* Node.js 18+
+* npm or yarn
+* Firebase project
+* VAPI AI credentials
+* Google AI API Key
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/ddv2311/InterviewPro.git
+   cd InterviewPro
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Create a `.env.local` file in the root directory:
+
+   ```env
+   # Firebase Configuration
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+   # Firebase Admin SDK
+   FIREBASE_ADMIN_SDK_KEY=your_firebase_admin_sdk_key
+
+   # VAPI AI
+   VAPI_API_KEY=your_vapi_api_key
+
+   # Google AI
+   GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_api_key
+   ```
+
+4. **Configure Firebase**
+
+   * Create a Firebase project
+   * Enable Authentication (Email/Password)
+   * Set up Firestore database
+   * Add your domain to authorized domains
+
+5. **Run the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🌟 Platform Usage
+
+### For Candidates
+
+1. **Sign Up / Sign In**
+2. **Start Interview** > Select Role + Type + Stack + Difficulty
+3. **Voice-Based Mock Interview** with real-time AI
+4. **Get Scored Feedback** on:
+
+   * Communication
+   * Technical Knowledge
+   * Problem Solving
+   * Confidence
+   * Cultural Fit
+5. **Review Performance History**
+
+### Interview Flow
+
+* **Natural Voice Conversation** with AI interviewer
+* **Live Transcription & Scoring** using Deepgram + GPT
+* **Instant Feedback** with detailed suggestions
+
+---
+
+## 🔄 VAPI AI Workflow vs Traditional Voice-to-LLM
+
+### 🔁 Traditional Voice-to-LLM
+
+* **Flow**: Microphone → Speech-to-Text → LLM → Text-to-Speech
+* **Latency**: Higher due to multiple API hops
+* **Voice Output**: Often robotic or generic
+* **Interaction**: Turn-based, less fluid
+* **Context**: Harder to maintain stateful memory in multi-turn dialogue
+
+### 🚀 VAPI Workflow in InterviewPro
+
+* **Integrated Pipeline**: Real-time voice channel + transcription + LLM + emotional voice synthesis
+* **Latency Optimized**: Uses WebSocket streaming with Deepgram for instant STT, and 11Labs for near-human TTS
+* **Natural Flow**: Supports continuous back-and-forth without delays
+* **Personality-Rich Responses**: Human-like inflections, tones, and emotions
+* **Stateful Agent**: Maintains contextual memory across the full session
+* **Intelligence Layer**: VAPI orchestrates speaker handoffs, interruptions, and timing
+
+### 💡 Why It Matters
+
+* **Feels Like Talking to a Real Interviewer**
+* **No Awkward Delays Between Q\&A**
+* **Faster Feedback and Immersive Flow**
+* **More Engaging and Confidence-Building for Users**
+
+> **VAPI is not just a voice wrapper for LLMs — it’s a real-time voice agent framework optimized for human-like conversation.**
+
+---
+
+## 🔧 Configuration
+
+### Supported Domains
+
+* **Frontend**: React, Vue, Angular, Next.js
+* **Backend**: Node.js, Express, Python, Java, etc.
+* **Databases**: MongoDB, MySQL, Firebase
+* **Cloud/DevOps**: AWS, Docker, GCP, Azure
+* **Design/Tools**: Figma, Git, Photoshop
+
+### Interview Modes
+
+* **Technical** - Data structures, system design
+* **Behavioral** - HR-style conversations
+* **Mixed** - Real-world hybrid rounds
+
+---
+
+## 📊 Feedback System
+
+### Evaluation Metrics
+
+* **Overall Score**
+* **Detailed Category Scores**
+* **Strengths & Weaknesses**
+* **Custom Suggestions**
+* **Final Summary Assessment**
+
+---
+
+## 🔐 Security Measures
+
+* Firebase Auth with secure token handling
+* Environment variables for sensitive configs
+* API authentication middleware
+* Role-based access (if needed)
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Connect GitHub to Vercel
+2. Configure `.env` variables in dashboard
+3. Push to `main` to auto-deploy
+
+### Manual
+
+```bash
+npm run build
+npm run start
+```
+
+---
+
+## 🤝 Contributing
+
+```bash
+git checkout -b feature/your-feature-name
+git commit -m "feat: add new feature"
+git push origin feature/your-feature-name
+```
+
+Create a Pull Request
+
+---
+
+## 📅 License
+
+Licensed under the MIT License. See `LICENSE` file.
+
+---
+
+## 🌟 Acknowledgments
+
+* [VAPI AI](https://vapi.ai)
+* [Firebase](https://firebase.google.com)
+* [OpenAI](https://openai.com)
+* [11Labs](https://elevenlabs.io)
+* [Vercel](https://vercel.com)
+
+---
+
+**InterviewPro** – Practice Smarter. Perform Better. Land Your Dream Job. 🏆
