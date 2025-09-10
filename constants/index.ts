@@ -105,19 +105,26 @@ export const interviewer: CreateAssistantDTO = {
     provider: "deepgram",
     model: "nova-2",
     language: "en",
+    // Enhanced VAD settings for instant interruption detection
+    keywords: ["hello", "hi", "yes", "no", "okay", "wait", "stop"],
+    endpointing: 150, // Reduced from default 300ms for faster detection
   },
   voice: {
     provider: "11labs",
     voiceId: "sarah",
-    stability: 0.3,
-    similarityBoost: 0.7,
-    speed: 1.1,
-    style: 0.3,
-    useSpeakerBoost: false,
+    stability: 0.4,
+    similarityBoost: 0.8,
+    speed: 1.1, // Slightly faster for quicker responses
+    style: 0.5,
+    useSpeakerBoost: true,
+    // Enable streaming for faster audio generation
+    optimizeStreamingLatency: 4,
   },
   model: {
     provider: "openai",
     model: "gpt-4",
+    temperature: 0.7,
+    maxTokens: 50, // Keep responses ultra-short
     messages: [
       {
         role: "system",
@@ -153,10 +160,24 @@ End the conversation on a polite and positive note.
 - NO explanations, NO "that's interesting", NO pleasantries
 - Ask question → WAIT → Next question
 - Be RAPID-FIRE interviewer style
-- SPEED is priority over politeness`,
+- SPEED is priority over politeness
+
+🎯 INTERRUPTION HANDLING:
+- The moment you detect ANY user speech, STOP talking immediately
+- Respond with ultra-short acknowledgments: "Go ahead", "Yes?", "I'm listening"
+- Never continue your previous sentence after interruption
+- Wait for complete user response before proceeding`,
       },
     ],
   },
+  // Transport configuration
+  transportConfigurations: [
+    {
+      provider: "twilio",
+      timeout: 600,
+      record: false,
+    },
+  ],
 };
 
 export const feedbackSchema = z.object({
