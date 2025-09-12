@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     // If templateId is provided, use the template
     if (templateId) {
       console.log("inside template ", templateId);
-      
+
       const templateDoc = await db
         .collection("interview_templates")
         .doc(templateId)
@@ -167,15 +167,15 @@ Instructions:
 
     await db.collection("interview_sessions").add(session);
 
-         return Response.json(
-       {
-         success: true,
-         interviewId: interviewRef.id,
-         systemPrompt: systemPrompt,
-         questions: questions,
-       },
-       { status: 200 }
-     );
+    return Response.json(
+      {
+        success: true,
+        interviewId: interviewRef.id,
+        systemPrompt: systemPrompt,
+        questions: questions,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error:", error);
     return Response.json({ success: false, error: error }, { status: 500 });
