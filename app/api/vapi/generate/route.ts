@@ -2,14 +2,16 @@ import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { initializeFlowState, generateInitialQuestions } from "@/lib/adaptive-flow";
 
 export async function POST(request: Request) {
-  const { type, role, level, techstack, amount, userid, templateId } =
+  const { type, role, level, techstack, amount, userid, templateId, useAdaptiveFlow } =
     await request.json();
 
   try {
     let systemPrompt = "";
     let questions = [];
+    let adaptiveFlowState = null;
 
     // If templateId is provided, use the template
     if (templateId) {
@@ -154,7 +156,7 @@ Instructions:
     const interviewRef = await db.collection("interviews").add(interview);
 
     // Create interview session for tracking
-    const session = {
+    const sessionRef = await db.collection("interview_sessions").add({
       templateId: templateId || null,
       userId: userid,
       status: "pending",
@@ -163,16 +165,84 @@ Instructions:
       transcript: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    });
 
-    await db.collection("interview_sessions").add(session);
+    // Initialize adaptive flow if requested
+    if (useAdaptiveFlow) {
+      const techStackArray = techstack ? techstack.split(",").map((t: string) => t.trim()) : [];
+      const difficultyMap: { [key: string]: number } = {
+        "Junior": 3,
+        "Mid-level": 5,
+        "Senior": 7,
+        "Easy": 2,
+        "Medium": 5,
+        "Hard": 8
+      };
+      
+      const baseDifficulty = difficultyMap[level] || 5;
+      
+      adaptiveFlowState = await initializeFlowState(
+        sessionRef.id,
+        role || "Interview",
+        techStackArray,
+        baseDifficulty,
+        amount || 10
+      );
+
+      // Generate initial adaptive questions (2-3) instead of all questions
+      const initialQuestions = await generateInitialQuestions(
+        role || "Interview",
+        techStackArray,
+        baseDifficulty
+      );
+
+      // Update questions to be adaptive
+      questions = initialQuestions;
+      
+      // Update system prompt for adaptive flow
+      systemPrompt = `You are an AI interviewer conducting an adaptive interview for a ${role} position.
+
+🎯 ADAPTIVE INTERVIEW SYSTEM - CRITICAL INSTRUCTIONS:
+
+ADAPTIVE FLOW RULES:
+- You will start with 2-3 initial questions
+- After each user response, the system will analyze their answer and generate the next question
+- Questions adapt based on user performance and extracted keywords
+- Difficulty adjusts based on consecutive correct/incorrect answers
+- Stay focused on the role: ${role}
+- Tech stack focus: ${techStackArray.join(", ")}
+
+CONVERSATION FLOW:
+1. Ask the first question and wait for response
+2. System analyzes response and generates next question
+3. Continue until interview completion
+4. Do NOT ask all questions at once
+
+VOICE INTERACTION RULES:
+- Keep responses ULTRA SHORT (max 10-15 words)
+- Ask ONE question at a time, then STOP and WAIT
+- No explanations or context - just ask the question
+- If interrupted, say "Go ahead" immediately
+- Be direct and efficient
+
+RESPONSE FORMAT:
+✅ "Tell me about your React experience."
+✅ "Any specific challenges?"
+✅ "Describe your debugging process."
+❌ "That's interesting, can you elaborate more..."
+
+The adaptive system will handle question progression automatically.`;
+    }
 
     return Response.json(
       {
         success: true,
         interviewId: interviewRef.id,
+        sessionId: sessionRef.id,
         systemPrompt: systemPrompt,
         questions: questions,
+        adaptiveFlow: useAdaptiveFlow,
+        adaptiveFlowState: adaptiveFlowState,
       },
       { status: 200 }
     );

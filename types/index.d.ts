@@ -1,4 +1,4 @@
-interface Feedback {
+export interface Feedback {
   id: string;
   interviewId: string;
   totalScore: number;
@@ -235,4 +235,44 @@ interface DashboardStats {
     count: number;
   }>;
   recentActivity: AdminAction[];
+}
+
+// Adaptive Flow Types
+export interface AdaptiveFlowState {
+  sessionId: string;
+  currentDifficulty: number; // 1-10 scale
+  baseDifficulty: number; // Original admin-set difficulty
+  consecutiveCorrect: number;
+  consecutiveIncorrect: number;
+  totalQuestions: number;
+  questionsAsked: number;
+  mvpKeywords: string[];
+  role: string;
+  techStack: string[];
+  questionHistory: QuestionRecord[];
+  lastAnalysis?: ResponseAnalysis;
+}
+
+export interface QuestionRecord {
+  question: string;
+  timestamp: string;
+  difficulty: number;
+  category: string;
+}
+
+export interface ResponseAnalysis {
+  mvpKeywords: string[];
+  confidence: number; // 1-10 scale
+  technicalAccuracy: number; // 1-10 scale
+  completeness: number; // 1-10 scale
+  overallScore: number; // 1-10 scale
+  suggestedNextDifficulty: number;
+  reasoning: string;
+}
+
+interface QuestionGenerationRequest {
+  sessionId: string;
+  userResponse: string;
+  currentQuestion: string;
+  flowState: AdaptiveFlowState;
 }

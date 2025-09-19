@@ -13,6 +13,7 @@ import {
   createInterruptionAwareMessageHandler,
   createOptimizedAssistant 
 } from "@/lib/interruption-handler";
+import { AdaptiveVapiHandler, AdaptiveVapiConfig } from "@/lib/adaptive-vapi-handler";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -46,6 +47,13 @@ const Agent = ({
   const [speechLatency, setSpeechLatency] = useState<number>(0);
   const [generatedInterviewId, setGeneratedInterviewId] = useState<string | null>(null);
   
+  // Adaptive flow state
+  const [adaptiveHandler, setAdaptiveHandler] = useState<AdaptiveVapiHandler | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<string>("");
+  const [questionIndex, setQuestionIndex] = useState<number>(0);
+  const [useAdaptiveFlow, setUseAdaptiveFlow] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
   // Initialize interruption handler
   const [interruptionHandler] = useState(() => new InterruptionHandler({
     enableLogging: true,
@@ -73,6 +81,15 @@ const Agent = ({
     const onMessage = (message: Message) => {
       console.log("📨 Message received:", message.type, message);
       
+      // Handle adaptive flow messages first
+      if (adaptiveHandler) {
+        adaptiveHandler.handleMessage(message, (nextQuestion: string) => {
+          console.log("🔄 Adaptive flow generated next question:", nextQuestion);
+          setCurrentQuestion(nextQuestion);
+          setQuestionIndex(prev => prev + 1);
+        });
+      }
+      
       // Handle transcript messages
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { role: message.role, content: message.transcript };
@@ -82,6 +99,12 @@ const Agent = ({
         if (message.role === "user") {
           setIsUserSpeaking(false);
           console.log("✅ User finished speaking:", message.transcript);
+        }
+        
+        // Update adaptive handler with AI questions
+        if (message.role === "assistant" && adaptiveHandler) {
+          adaptiveHandler.updateCurrentQuestion(message.transcript);
+          setCurrentQuestion(message.transcript);
         }
       }
       
@@ -315,6 +338,7 @@ const Agent = ({
             templateId: templateId,
             userid: userId,
             type: "generate",
+            useAdaptiveFlow: true, // Enable adaptive flow for new interviews
           }),
         });
 
@@ -331,6 +355,27 @@ const Agent = ({
         const interviewId = result.interviewId;
         setGeneratedInterviewId(interviewId);
         
+        // Initialize adaptive flow if enabled
+        if (result.adaptiveFlow && result.sessionId) {
+          console.log("🎯 Initializing adaptive flow for session:", result.sessionId);
+          setUseAdaptiveFlow(true);
+          setSessionId(result.sessionId);
+          
+          const adaptiveConfig: AdaptiveVapiConfig = {
+            sessionId: result.sessionId,
+            useAdaptiveFlow: true,
+            currentQuestion: result.questions?.[0] || "",
+            questionIndex: 0,
+            adaptiveFlowState: result.adaptiveFlowState,
+          };
+          
+          const handler = new AdaptiveVapiHandler(adaptiveConfig);
+          setAdaptiveHandler(handler);
+          setCurrentQuestion(result.questions?.[0] || "");
+          
+          console.log("✅ Adaptive flow initialized");
+        }
+        
         // Use the interviewer template with custom variables for template-based interviews
         console.log("Starting VAPI call with template-based interviewer for interview ID:", interviewId);
         console.log("System prompt:", result.systemPrompt);
@@ -341,7 +386,14 @@ const Agent = ({
           : "";
 
         // Create enhanced system prompt with template data
-        const enhancedSystemPrompt = `${result.systemPrompt}
+        let enhancedSystemPrompt;
+        
+        if (result.adaptiveFlow) {
+          // Use adaptive flow system prompt (already configured in the API)
+          enhancedSystemPrompt = result.systemPrompt;
+        } else {
+          // Use traditional system prompt with all questions
+          enhancedSystemPrompt = `${result.systemPrompt}
 
 INTERVIEW QUESTIONS TO ASK:
 ${formattedQuestions}
@@ -367,6 +419,7 @@ INTERRUPTION RESPONSES:
 - User interrupts → "Go ahead"
 - User pauses → Ask next question immediately
 - Keep it FAST and SNAPPY`;
+        }
 
         // Use enhanced interviewer configuration with interruption optimizations
         console.log("🚀 Starting interview with interruption-optimized configuration");
@@ -567,6 +620,58 @@ INTERRUPTION RESPONSES:
               </span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Adaptive Flow Monitor */}
+      {callStatus === "ACTIVE" && useAdaptiveFlow && adaptiveHandler && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-sm mx-4 mb-4">
+          <h4 className="font-semibold mb-2 text-blue-700 flex items-center">
+            🎯 Adaptive Interview Flow
+            <span className="ml-2 w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          </h4>
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-blue-600">Current Question:</span>
+              <span className="ml-2 font-semibold text-gray-800">{questionIndex + 1}</span>
+            </div>
+            <div>
+              <span className="text-blue-600">Difficulty Level:</span>
+              <span className="ml-2 font-semibold text-orange-600">
+                {adaptiveHandler.getCurrentDifficulty()}/10
+              </span>
+            </div>
+            <div>
+              <span className="text-blue-600">Questions Left:</span>
+              <span className="ml-2 font-semibold text-green-600">
+                {adaptiveHandler.getQuestionsRemaining()}
+              </span>
+            </div>
+            <div>
+              <span className="text-blue-600">MVP Keywords:</span>
+              <span className="ml-2 font-semibold text-purple-600">
+                {adaptiveHandler.getMVPKeywords().length}
+              </span>
+            </div>
+          </div>
+          {currentQuestion && (
+            <div className="mt-3 p-2 bg-white rounded border">
+              <span className="text-xs text-gray-500">Current Question:</span>
+              <p className="text-sm text-gray-800 mt-1">{currentQuestion}</p>
+            </div>
+          )}
+          {adaptiveHandler.getMVPKeywords().length > 0 && (
+            <div className="mt-2">
+              <span className="text-xs text-gray-500">Extracted Keywords:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {adaptiveHandler.getMVPKeywords().slice(-5).map((keyword, index) => (
+                  <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
